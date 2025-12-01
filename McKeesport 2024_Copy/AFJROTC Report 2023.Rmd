@@ -1,0 +1,316 @@
+---
+title: "AFJROTC Report 2023"
+author: "Nara Hernandez"
+date: "2024-01-09"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#set it to the path of whatever folder your data is stored in on your device!
+
+knitr::opts_knit$set(root.dir = 'C:/Users/every/OneDrive/Documents/R/win-library/Personal')
+#this is the path that works on Nara's Laptop
+
+library(tidyverse)
+library(tinytex)
+library(latexpdf)
+```
+
+## Purpose and Overview
+
+School/JROTC Unit of interest: **McKeesport Area Senior High School (PA-20162)**  
+
+This report is made by request of *Lt Col. Steven Hernandez* and is designed to explore some outside-of-school factors that impact the McKeesport Area Senior High School students' lives in order to make better informed adjustments to the academic plans in order to maximize positive impact of AFJROTC program/curriculum. 
+
+<https://www.kaggle.com/datasets/thedevastator/2013-irs-us-income-data-by-zip-code?resource=download> 
+
+### Importing Data
+
+Most of the following Data is taken from Niche <https://www.niche.com/places-to-live/mckeesport-allegheny-pa/crime-safety/>
+```{r, include=FALSE}
+mn_data <- data.frame(m_assault = 1295.4, n_assault = 282.7, m_murder = 33.7, n_murder = 6.1, m_rape = 48.2, n_rape = 40.7, m_robbery = 154.1, n_robbery = 135.5, m_burglary = 770.5, n_burglary = 500.1, m_theft = 1786.7, n_theft = 2042.8, m_mvtheft = 202.3, n_mvtheft = 284, m_med_income = 32042, n_med_income = 69021)
+
+```
+
+200% or below the Federal Poverty Income Level as defined by the U.S. Department of Health and Human Services <https://dced.pa.gov/housing-and-development/weatherization/income-eligibility/>
+```{r, include=FALSE}
+fed_pov_income200 <- data.frame(size1 = 29160, size2 = 39440, size3 = 49720, size4 = 60000, size5 = 70280, size6 = 80560, size7 = 90840, size8 = 101120)
+```
+
+Alternate source: <https://www.dhs.pa.gov/Services/Assistance/Pages/FPIG.aspx> 
+
+```{r, include=FALSE, eval=FALSE}
+msah_data <-
+```
+
+8 other AFJROTC units in the South West part of Pennsylvania selected from list of All AFJROTC Units <https://www.google.com/maps/d/u/0/viewer?mid=1Zh9Kwbe3F2OM3kwG1QRfJdI-6dPDaW5J&hl=en_US&ll=40.50006939395599%2C-79.77411774444826&z=9> 
+```{r, include=FALSE}
+pa_units = data.frame(PA20091_zip = 15401, PA20141_zip = 15642, PA20162_zip = 15132, PA20031_zip = 15122, PA20063_zip = 15239, PA20201_zip = 15690, PA022_zip = 15090, PA20101_zip = 15044, PA942_zip = 15658)
+#PA20091 = Laurel Highlands High School,
+#PA20141 = Norwin High School, 
+#PA20162 = McKeesport Area Senior High School,
+#PA20031 = West Mifflin Area High School, 
+#PA20063 = Plum Senior High School, 
+#PA20201 = Kiski Area High School, 
+#PA022 = North Allegheny Intermediate High School, (Moved from 15237 to 15090)
+#PA20101 = Pine-Richland High School
+#PA942 = Ligonier Val ley Senior High
+```
+
+
+```{r, include=FALSE}
+#PA20091 = Laurel Highlands High School
+lhhs_data <- data.frame(assault = NA, murder = NA, rape = NA, robbery = NA, burglary = NA, theft = NA, mvtheft = NA, med_income = 46632)
+```
+
+```{r, include=FALSE}
+#PA20141 = Norwin Senior High School,
+nshs_data <- data.frame(assault = 42.7, murder = 0, rape = 3.3, robbery = 3.3, burglary = 101.9, theft = 805.6, mvtheft = 49.3, med_income = 82309)
+```
+
+```{r, include=FALSE}
+#PA20031 = West Mifflin Area High School,
+wmahs_data <- data.frame(assault = 20.9, murder = 0, rape = 0, robbery = 20.9, burglary = 20.9, theft = 298.1, mvtheft = 10.5, med_income = 58689)
+```
+
+
+```{r, include=FALSE}
+#PA20063 = Plum Senior High School,
+pshs_data <- data.frame(assault = 209, murder = 0, rape = 11, robbery = 18.3, burglary = 69.7, theft = 425.3, mvtheft = 55, med_income = 85237)
+```
+
+
+```{r, include=FALSE}
+#PA20201 = Kiski Area High School,
+kahs_data <- data.frame(assault = 163.1, murder = 1.9, rape = 14.4, robbery = 32.1, burglary = 190.4, theft = 1083.1, mvtheft = 45.6, med_income = 64708)
+```
+
+```{r, include=FALSE}
+#PA022 = North Allegheny Intermediate High School, McCandless Township 15090
+naihs_data <- data.frame(assault = 10.5, murder = 0, rape = 0, robbery = 7, burglary = 10.5, theft = 467.1, mvtheft = 14, med_income = 91244 )
+```
+
+
+```{r, include=FALSE}
+#PA20101 = Pine-Richland High School
+prhs_data <- data.frame(assault = NA, murder = NA, rape = NA, robbery = NA, burglary = NA, theft = NA, mvtheft = NA, med_income = 116124)
+```
+
+
+```{r, include=FALSE}
+#PA942 = Ligonier Valley Senior High
+lvhs_data <- data.frame(assault = 109.4, murder = 0, rape = 15.6, robbery = 0, burglary = 15.6, theft = 62.5, mvtheft = 0, med_income = 63464)
+```
+
+
+```{r, include=FALSE, eval=FALSE}
+#template
+_data <- data.frame(assault = , murder = , rape = , robbery = , burglary = , theft = , mvtheft = , med_income = )
+```  
+
+The units will be displayed by unit IDs. For clarity an asterisk `*` has been added to the beginning of the McKeesport Area Senior High School AFJROTC unit ID `*PA20162`
+
+## Economic Income
+```{r, include=FALSE, eval=FALSE}
+#Average Income for our zipcode compared to national average
+#Average Income for our zipcode compared to other units average
+#Average Income for our zipcode compared to state average
+```
+
+Median Income for our zipcode compared to national average and the 8 closest AFJROTC units within our state.
+```{r, include=FALSE, eval=FALSE}
+med_income_data <- data.frame(national_mi = mn_data$n_med_income,
+                          PA20091_mi = lhhs_data$med_income,
+                       PA20141_mi = nshs_data$med_income,   
+                       PA20162_mi = mn_data$m_med_income,
+                       PA20031_mi = wmahs_data$med_income,
+                       PA20063_mi = pshs_data$med_income, 
+                       PA20201_mi = kahs_data$med_income, 
+                       PA022_mi = naihs_data$med_income, 
+                       PA20101_mi = prhs_data$med_income,
+                       PA942_mi = lvhs_data$med_income)
+```
+
+```{r, include=FALSE}
+med_income_data <- data.frame(unit = c("National","*PA20162","PA20091","PA20141", "PA20031","PA20063", "PA20201", "PA022", "PA20101", "PA942"),
+                              frequency = c(mn_data$n_med_income, mn_data$m_med_income, lhhs_data$med_income, nshs_data$med_income, wmahs_data$med_income,  pshs_data$med_income, kahs_data$med_income, naihs_data$med_income, prhs_data$med_income, lvhs_data$med_income)
+                              )
+```
+
+
+```{r, include=TRUE, echo=FALSE}
+med_income_data %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = unit, y = frequency, fill = unit), stat = "identity") +
+  geom_text(aes(x = unit, y = frequency, label = frequency), nudge_y = 5000) +
+  theme(axis.text.x = element_text(angle = 45))
+  #geom_text(aes(label = signif(frequency)), nudge_y = 3)
+```   
+  
+
+As can be seen in the visualization above, out of all the nearby AFJROTC units in the south west region of PA, the Mckeesport Area High School is the unit located in an area with the lowest median income.   
+
+The national median income for a household is \$`r format(mn_data$n_med_income, scientific = FALSE, big.mark = ",")` and the median household income in Mckeesport area is \$`r format(mn_data$m_med_income, scientific = FALSE, big.mark = ",")`.
+  
+This is worth considering as the PA's Department of Human Services' 2023 Federal Poverty Income Guidelines state that \$31,347.00 is the guideline marker for a 1 person household and that	\$42,398.00 is the guideline marker for a 2 person household.  
+  
+Assuming all students at McKeesport Senior Area High School are an only child living with a single parent, it's likely that even more than half of them would be living below the poverty line. However, in reality, they are most likely living in larger households under similar incomes.   
+  
+## Area Crime Rates  
+
+Outside Stress factors such as safety concerns can affect academic performance of students. Here are a few crime statistics taken from Niche for consideration. In the following categories, 2 of the nearby units have been removed because the data for them regarding crime rates was unavailable.  
+  
+These crime rates are calculated annually per 100,000 residents.   
+
+### Assault  
+```{r, include=FALSE}
+assault_data <- data.frame(unit = c("National","*PA20162","PA20091","PA20141", "PA20031","PA20063", "PA20201", "PA022", "PA20101", "PA942"),
+                              frequency = c(mn_data$n_assault, mn_data$m_assault, lhhs_data$assault, nshs_data$assault, wmahs_data$assault,  pshs_data$assault, kahs_data$assault, naihs_data$assault, prhs_data$assault, lvhs_data$assault)
+                              )
+
+assault_data <- assault_data %>% na.omit()
+```
+
+
+```{r, include=TRUE, echo=FALSE}
+assault_data %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = unit, y = frequency, fill = unit), stat = "identity")+
+  geom_text(aes(x = unit, y = frequency, label = frequency), nudge_y = 50) +
+  theme(axis.text.x = element_text(angle = 45))
+```  
+  
+The rate of assaults in the McKeesport area where Unit PA-20162 is stationed is much higher than the national average and higher than the areas that the other units are situated in. It's highly likely that the students at McKeesport have experienced/witnessed an assault, are exposed to violence regularly, have safety concerns relating to assaults, and/or have trauma related to assaults.   
+
+### Murder  
+```{r, include=TRUE, echo=FALSE}
+murder_data <- data.frame(unit = c("National","*PA20162","PA20091","PA20141", "PA20031","PA20063", "PA20201", "PA022", "PA20101", "PA942"),
+                              frequency = c(mn_data$n_murder, mn_data$m_murder, lhhs_data$murder, nshs_data$murder, wmahs_data$murder,  pshs_data$murder, kahs_data$murder, naihs_data$murder, prhs_data$murder, lvhs_data$murder)
+                              )
+murder_data <- murder_data %>% na.omit()
+```
+
+
+```{r, include=TRUE, echo=FALSE}
+murder_data %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = unit, y = frequency, fill = unit), stat = "identity") +
+  geom_text(aes(x = unit, y = frequency, label = frequency), nudge_y = 1) +
+  theme(axis.text.x = element_text(angle = 45))
+```   
+  
+The rate of murders in the McKeesport area where Unit PA-20162 is stationed is much higher than the national average and higher than the areas that the other units are situated in. It's highly likely that the students at McKeesport have have safety concerns relating to murders and/or have trauma related to murders.   
+
+### Rape  
+```{r, include=TRUE, echo=FALSE}
+rape_data <- data.frame(unit = c("National","*PA20162","PA20091","PA20141", "PA20031","PA20063", "PA20201", "PA022", "PA20101", "PA942"),
+                              frequency = c(mn_data$n_rape, mn_data$m_rape, lhhs_data$rape, nshs_data$rape, wmahs_data$rape,  pshs_data$rape, kahs_data$rape, naihs_data$rape, prhs_data$rape, lvhs_data$rape)
+                              )
+
+rape_data <- rape_data %>% na.omit()
+```
+
+
+```{r, include=TRUE, echo=FALSE}
+rape_data %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = unit, y = frequency, fill = unit), stat = "identity")+
+  geom_text(aes(x = unit, y = frequency, label = frequency), nudge_y = 2) +
+  theme(axis.text.x = element_text(angle = 45))
+```  
+  
+The rate of rapes in the McKeesport area where Unit PA-20162 is stationed is higher than the national average and higher than the areas that the other units are situated in. It's highly likely that the students at McKeesport have have safety concerns relating to rape and/or have trauma related to rape.  
+  
+**Note**: According to the Office for Victims of Crime (.gov) theft (or "Larceny-theft") is defined as the unlawful removal of property. Burglary is defined as the unlawful entry into almost any structure with the intent to commit a crime inside. Robbery, on the other hand, is the violent theft of property or money.
+
+### Robbery  
+```{r, include=TRUE, echo=FALSE}
+robbery_data <- data.frame(unit = c("National","*PA20162","PA20091","PA20141", "PA20031","PA20063", "PA20201", "PA022", "PA20101", "PA942"),
+                              frequency = c(mn_data$n_robbery, mn_data$m_robbery, lhhs_data$robbery, nshs_data$robbery, wmahs_data$robbery,  pshs_data$robbery, kahs_data$robbery, naihs_data$robbery, prhs_data$robbery, lvhs_data$robbery)
+                              )
+
+robbery_data <- robbery_data %>% na.omit()
+```
+
+
+```{r, include=TRUE, echo=FALSE}
+robbery_data %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = unit, y = frequency, fill = unit), stat = "identity") +
+  geom_text(aes(x = unit, y = frequency, label = frequency), nudge_y = 5) +
+  theme(axis.text.x = element_text(angle = 45))
+``` 
+  
+The rate of robberies in the McKeesport area where Unit PA-20162 is stationed is higher than the national average and higher than the areas that the other units are situated in. It's highly likely that the students at McKeesport have have safety concerns relating to being robbed and/or have trauma related to robberies.  
+
+### Burglary  
+```{r, include=TRUE, echo=FALSE}
+burglary_data <- data.frame(unit = c("National","*PA20162","PA20091","PA20141", "PA20031","PA20063", "PA20201", "PA022", "PA20101", "PA942"),
+                              frequency = c(mn_data$n_burglary, mn_data$m_burglary, lhhs_data$burglary, nshs_data$burglary, wmahs_data$burglary,  pshs_data$burglary, kahs_data$burglary, naihs_data$burglary, prhs_data$burglary, lvhs_data$burglary)
+                              )
+
+burglary_data <- burglary_data %>% na.omit()
+```
+
+
+```{r, include=TRUE, echo=FALSE}
+burglary_data %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = unit, y = frequency, fill = unit), stat = "identity") +
+  geom_text(aes(x = unit, y = frequency, label = frequency), nudge_y = 20) +
+  theme(axis.text.x = element_text(angle = 45))
+
+```   
+  
+The rate of burglaries in the McKeesport area where Unit PA-20162 is stationed is higher than the national average and higher than the areas that the other units are situated in. It's highly likely that the students at McKeesport have have safety concerns relating to burglaries and/or have trauma related to burglaries. 
+
+### Theft  
+```{r, include=TRUE, echo=FALSE}
+theft_data <- data.frame(unit = c("National","*PA20162","PA20091","PA20141", "PA20031","PA20063", "PA20201", "PA022", "PA20101", "PA942"),
+                              frequency = c(mn_data$n_theft, mn_data$m_theft, lhhs_data$theft, nshs_data$theft, wmahs_data$theft,  pshs_data$theft, kahs_data$theft, naihs_data$theft, prhs_data$theft, lvhs_data$theft)
+                              )
+
+theft_data <- theft_data %>% na.omit()
+```  
+
+
+```{r, include=TRUE, echo=FALSE}
+theft_data %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = unit, y = frequency, fill = unit), stat = "identity") +
+  geom_text(aes(x = unit, y = frequency, label = frequency), nudge_y = 75) +
+  theme(axis.text.x = element_text(angle = 45))
+
+```  
+  
+The rate of thefts in the McKeesport area where Unit PA-20162 is stationed is one of the few crime rates that are less than the national average. However, this crime rate is still higher than the areas that the other units are situated in.
+
+### Motor Vehicle Theft  
+```{r, include=TRUE, echo=FALSE}
+mvtheft_data <- data.frame(unit = c("National","*PA20162","PA20091","PA20141", "PA20031","PA20063", "PA20201", "PA022", "PA20101", "PA942"),
+                              frequency = c(mn_data$n_mvtheft, mn_data$m_mvtheft, lhhs_data$mvtheft, nshs_data$mvtheft, wmahs_data$mvtheft,  pshs_data$mvtheft, kahs_data$mvtheft, naihs_data$mvtheft, prhs_data$mvtheft, lvhs_data$mvtheft)
+                              )
+
+mvtheft_data <- mvtheft_data %>% na.omit()
+```
+
+
+```{r, include=TRUE, echo=FALSE}
+mvtheft_data %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = unit, y = frequency, fill = unit), stat = "identity")+
+  geom_text(aes(x = unit, y = frequency, label = frequency), nudge_y = 10) +
+  theme(axis.text.x = element_text(angle = 45))
+``` 
+  
+The rate of thefts in the McKeesport area where Unit PA-20162 is stationed is one of the few crime rates that are less than the national average. However, this crime rate is still higher than the areas that the other units are situated in.
+
+### Conclusion
+This brief investigation into some of the economic and safety concerns in the McKeesport area shows that McKeesport students are in a particularly difficult environment and that adjusting the AFJROTC curriculumn to better address their needs would be worth considering.
+  
+If I were to further extend on this investigation, I would look at other factors such as McKeesport Senior Area High School's academic performances in comparison to the other units in the state, factors in comparison with All AFJROTC units in the world, and also analyze other factors such as economic Mobility Variables (based on Raj Chetty's research). 

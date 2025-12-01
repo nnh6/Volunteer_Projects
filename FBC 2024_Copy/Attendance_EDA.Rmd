@@ -1,0 +1,601 @@
+---
+title: "Attendance_Basic_EDA"
+author: "Nnh6"
+date: "2023-12-17"
+output:
+  pdf_document: default
+  html_document: default
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Change or Die
+
+If the church waits unit it’s very sick, it is extremely difficult to get better. Pg 93
+
+This is a basic Exploratory Data Analysis using the FBC data.
+
+## Intro
+
+What I am investigating is based on some of Thom Rainer's books such as "Autopsy of a Deceased Church" and "Anatomy of a Revived Church" which analyzes churches diverse in denomination/non-denominational backgrounds, locations, local and regional demographics but followed paths that caused them to die.
+
+Thom S. Rainer: former president and CEO of LifeWay Christian Resources, founder and CEO of Church Answers.
+
+In his book: common patterns he discovered in churches before they closed were:
+
+- *Slow Erosion*
+- The Past is the Hero
+- The Church Refused to Look like the Community
+- *The Budget Moved Inwardly*
+- The Great Commission Becomes The Great Omission
+- The Preference-Driven Church
+- Pastoral Tenure Decreases
+- The Church Rarely Prayed Together
+- The Church had no clear purpose
+- The Church Obsessed Over the Facilities
+
+Here are some of the notable signs of "sickness" in the church: 
+
+- Significant numerical decline over the past 10 to 20 years. (Worship attendance)
+- Prolonged times of apathy. Occasional times of intense conflict.
+- The church is not known in the community.
+- New members are rare.
+- Revolving door of pastors.
+- The “good old days” are typically 20+ years in the past. (Been a long time since anyone felt really good about the church.)
+
+*"Very sick churches do not have to manifest all of these symptoms, but they typically have at least THREE of them."*
+
+*There are 4 states: Healthy, Symptoms of Sickness, Very Sick, and Dying. *
+*Before I continue, what do you think the data will say?*
+
+Many of these signs requires surveys both of the community and FBC members. In this initial investigation, I've decided to focus on the readily available data which is the attendance and financial data. 
+
+Revival Scorecards
+- *Worship Attendance Scorecard*
+- *Financial Giving as a Scorecard*
+- The Group-Ministry Scorecard
+- Scorecard for Conversions
+- Ministry Scorecard
+
+*Disclaimer*
+“While numbers are not everything, they can be telling from a symptomatic perspective.” When numbers are ignored, they tend to get even worse.
+
+“Failure to count has often resulted in failed accountability.” PG 44
+
+This isn't the whole story or the whole picture and this is not an invitation to start obsessing over numbers, but and invitation to take a good hard look at the current state of FBC.
+
+“We do not count for bragging rights, we do not count for numbers’ sake, and we do not count to see how good we are. Rather, we count for accountability. We count for obedience… It is simply a way of keeping our priorities in front of us.” Pg 53
+
+## Load Libraries and Data
+
+```{r, load_packages, echo=FALSE}
+library(tidyverse)
+```
+
+```{r, def_paths, echo=FALSE}
+path_attendance <- 'FBC_attendance - Sheet1.csv'
+path_directory <- 'FBC_attendance - Directory.csv'
+path_finances <- 'FBC_attendance - Finances_transposed.csv'
+```
+
+```{r, set_dfs, message=FALSE}
+df_attendance <- readr::read_csv(path_attendance, col_names = TRUE)
+df_directory <- readr::read_csv(path_directory, col_names = TRUE)
+df_finances <- readr::read_csv(path_finances, col_names = TRUE)
+```
+
+Add observation number as variable (Because of inconsistencies in dating format)
+```{r, add_obsv_num}
+df_attendance <- df_attendance %>% 
+  mutate(obsv_num = row_number())
+
+df_directory <- df_directory %>% 
+  mutate(obsv_num = row_number())
+
+df_finances <- df_finances %>% 
+  mutate(obsv_num = row_number())
+```
+
+split dates up
+```{r, date_convert_format}
+df_attendance$Date <- as.Date(df_attendance$Date, "%m/%d/%Y")
+```
+
+```{r, date_split}
+df_attendance <- df_attendance %>%
+  mutate(date = Date,
+         year = as.numeric(format(Date, format = "%Y")),
+         month = as.numeric(format(Date, format = "%m")),
+         day = as.numeric(format(Date, format = "%d")))
+```
+
+```{r, na_clean_up, include=FALSE}
+#na.omit(df_attendance$attendance)
+```
+
+## Explore Data: Attendance
+```{r, attendance_glimpse, echo=FALSE}
+glimpse(df_attendance)
+```
+
+```{r, attendance_summary, echo=FALSE}
+summary(df_attendance)
+```
+
+```{r, attendance_boxplot, message=FALSE, warning=FALSE}
+df_attendance %>%
+  ggplot(mapping = aes(x = attendance)) +
+  geom_boxplot()
+```
+Those upper outliers was during holidays: specifically Easter and Christmas. 
+
+```{r, attendance_histogram, message=FALSE, warning=FALSE}
+df_attendance %>%
+  ggplot(mapping = aes(x = attendance)) +
+  geom_histogram()
+```
+
+It seems like we have a pretty strong average as most observations seems to be around the 45 person per sunday service mark but Thom Rainer makes a strong claim that 
+
+“It is rare for a long-term church member to see erosion in his or her church. Growth may come rapidly, but decline is unusually slow, imperceptibly slow. This slow erosion is the worst type of decline for churches, because the members have no sense of urgency to change. They see the church on a regular basis; they don’t see the gradual decline that is taking place before their eyes.” (p12-13)
+
+“Most of the churches in America that close don’t shut the doors over a single or few cataclysmic events… the issue was slow erosion.” (pg17)
+
+So lets see if the slow erosion symptom is present in our church.
+
+(All data) Attendance From 1/3/2010 to 8/27/2023
+```{r, a_scatterplot_all, message=FALSE, warning=FALSE}
+df_attendance %>%
+  ggplot(mapping = aes(x = obsv_num, y = attendance)) +
+  geom_point() +
+  geom_smooth() +
+  geom_smooth(method = "lm", color = "red") +
+  geom_abline(intercept = 45, slope = 0, size = 1)+
+  ggtitle("Attendance Trend from 2010 to 2023")
+```  
+
+```{r, scatterplot_all_a, include=FALSE}
+df_attendance %>%
+  ggplot(mapping = aes(x = obsv_num, y = attendance)) +
+  geom_point() +
+  geom_smooth()
+```  
+
+```{r}
+mod_raw_lm <- lm(attendance ~ obsv_num, data = df_attendance)
+summary(mod_raw_lm)
+```
+
+```{r}
+coefplot::coefplot(mod_raw_lm, coefficients="obsv_num")
+```  
+Yes, the slow erosion symptom is present within FBC. This trend is statistically significant. 
+
+But I've heard people make the claim that it's different now and that we've been seeing some growth lately. So let's see if that's true. 
+
+*Bayesian Statistics*
+
+Use the trend from the years before 2023 as the prior.
+```{r, prior_year_attendance}
+df_prior_year <- df_attendance %>%
+  select(obsv_num, year, attendance)
+
+df_prior_year <- df_prior_year %>% 
+  mutate(year = ifelse(year == "2023", NA, year))
+
+df_prior_year <- na.omit(df_prior_year)
+```
+
+```{r, pyd_summary}
+summary(df_prior_year$attendance)
+```
+
+```{r, pyd_histogram, message=FALSE}
+df_prior_year %>%
+  ggplot(mapping = aes(x = attendance)) +
+  geom_histogram()
+```
+
+```{r, scatterplot_pyd, include=FALSE}
+df_prior_year %>%
+  ggplot(mapping = aes(x = obsv_num, y = attendance)) +
+  geom_point() +
+  geom_smooth() +
+  geom_smooth(method = "lm", color = "red")
+```
+
+```{r, pyd_mod_summary}
+mod_pyd_lm <-  lm(attendance ~ obsv_num, data = df_prior_year)
+summary(mod_pyd_lm)
+```
+
+```{r}
+coefplot::coefplot(mod_pyd_lm, coefficients="obsv_num")
+```
+
+Use the data from 2023 as the observations.
+```{r, data_2023}
+df_2023 <- df_attendance %>%
+  select(obsv_num, year, attendance)
+
+df_2023 <- df_2023 %>% 
+  mutate(year = ifelse(year != "2023", NA, year))
+
+df_2023 <- na.omit(df_2023)
+```
+
+```{r, scatterplot_2023, message=FALSE}
+df_2023 %>%
+  ggplot(mapping = aes(x = obsv_num, y = attendance)) +
+  geom_point() +
+  geom_smooth() +
+  geom_smooth(method = "lm", color = "red") +
+  geom_abline(intercept = 45, slope = 0, size = 1)+
+  ggtitle("2023 Attendance Trend")
+```
+Here is looks like there is actually a slight positive trend in the past year. 
+
+However...
+
+```{r, 2023_summary}
+mod_2023_lm <-  lm(attendance ~ obsv_num, data = df_2023)
+summary(mod_2023_lm)
+```
+
+```{r}
+coefplot::coefplot(mod_2023_lm, coefficients="obsv_num")
+```
+That trend is not statistically significant. There is still a decent chance that the real trend is actually negative. 
+
+Trying Bayesian (Based on HW07/08 because this is a regression problem not a classification problem)
+
+```{r, set_prior}
+prior_slope <- -0.008849
+```
+
+“Churches with symptoms of sickness are likely to have declined some in worship attendance over the past five years. If they have grown, the rate of growth was slower than the growth rate of the community in which they are located."
+
+It was hard to find a number for a population growth rate for the Oakland area.
+
+
+End based on Linear Model
+```{r, lm_coefs}
+coef(mod_raw_lm)
+```  
+
+```{r, when_0}
+# One variable example
+# -0.007581146*x + 47.705288488 = 0
+# -0.007581146*x = -47.705288488
+# What is the x?
+solve(-0.007581146, -47.705288488)
+```
+So according to our linear model, 6293 ish sundays from Jan 2010, there will be no-one under the label of FBC.
+
+However, churches are not just made up of one person.
+```{r, when_2}
+# One variable example
+# -0.007581146*x + 47.705288488 = 2
+# -0.007581146*x = -45.705288488
+# What is the x?
+solve(-0.007581146, -45.705288488)
+```
+
+```{r, when_10}
+# One variable example
+# -0.007581146*x + 47.705288488 = 10
+# -0.007581146*x = -37.705288488
+# What is the x?
+solve(-0.007581146, -37.705288488)
+```
+
+But this isn't the point. The point is that we aren't really living as a church and if God is still the same, if the Gospel still has life saving power and if God's word is true then *we need to change*.
+
+We need to repent.
+
+
+## Explore Data: Directory
+
+“Some churches have more committees than they do conversions.” Pg 35
+
+```{r, directory_glimpse, echo=FALSE}
+glimpse(df_directory)
+```
+
+```{r, directory_summary, echo=FALSE}
+summary(df_directory)
+```
+
+```{r, sunday_regulars_histogram, message=FALSE, warning=FALSE}
+df_directory %>%
+  ggplot(mapping = aes(x = sunday_regular)) +
+  geom_histogram()
+```
+
+
+```{r, members_histogram_a, message=FALSE, warning=FALSE}
+#df_directory <- df_directory %>% 
+#    mutate(member = ifelse(member == 1.0, TRUE, FALSE))
+df_directory <- df_directory %>% 
+    mutate(member = ifelse(member == 0.5, "NOT SURE", member))
+df_directory <- df_directory %>% 
+    mutate(member = ifelse(member == 0.0, "FALSE", member))
+df_directory <- df_directory %>% 
+    mutate(member = ifelse(member == 1.0, "TRUE", member))
+
+df_directory <- df_directory %>% 
+    mutate(sunday_regular = ifelse(sunday_regular == 0.5, "NOT SURE", sunday_regular))
+df_directory <- df_directory %>% 
+    mutate(sunday_regular = ifelse(sunday_regular == 0.0, "FALSE", sunday_regular))
+df_directory <- df_directory %>% 
+    mutate(sunday_regular = ifelse(sunday_regular == 1.0, "TRUE", sunday_regular))
+
+df_directory <- df_directory %>% 
+    mutate(Moved = ifelse(Moved == 0.0, "FALSE", Moved))
+df_directory <- df_directory %>% 
+    mutate(Moved = ifelse(Moved == 1.0, "TRUE", Moved))
+
+summary(df_directory)
+```
+
+
+```{r, members_histogram_b, message=FALSE, warning=FALSE}
+df_directory %>%
+  ggplot(mapping = aes( x = factor(sunday_regular))) +
+  geom_bar()
+```
+
+
+```{r, members_histogram_c, message=FALSE, warning=FALSE}
+df_directory %>%
+  ggplot(mapping = aes(fill = member, x = factor(sunday_regular))) +
+  geom_bar(position = "stack") 
+```
+
+```{r, members_histogram_d, message=FALSE, warning=FALSE}
+df_directory %>%
+  ggplot(mapping = aes(fill = factor(Moved), x = member)) +
+  geom_bar(position = "stack")
+```
+
+```{r, directory_histogram, message=FALSE, warning=FALSE, include=FALSE}
+df_directory %>%
+  ggplot( aes(x="", y = sunday_regular, fill= sunday_regular)) + 
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0)
+```
+
+```{r, directory_histogram_b, message=FALSE, warning=FALSE, include=FALSE}
+df_directory %>%
+  ggplot(mapping = aes(x =Moved)) +
+  geom_histogram(stat = "count")
+```
+
+## Explore Data: Financial 
+```{r, financial_glimpse, include=FALSE}
+glimpse(df_finances)
+```
+
+```{r, financial_summary, include=FALSE}
+summary(df_finances)
+```
+“Giving trends can become leading indicators. Many people will stop giving before they stop volunteering or stop attending, especially when they are struggling spiritually.” Pg 48
+
+```{r, f_boxplot_raw, include=FALSE}
+df_finances %>%
+  ggplot(mapping = aes(x = `Member Pledges`)) +
+  geom_boxplot()
+```
+
+```{r, f_histogram_raw, include=FALSE}
+df_finances %>%
+  ggplot(mapping = aes(x = `Member Pledges`)) +
+  geom_histogram()
+```
+
+```{r, message=FALSE}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = `Member Pledges`)) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red") +
+  ggtitle("Member Pledges")
+```  
+
+```{r, message=FALSE}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = `General Support-Unpledged`)) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red")+
+  ggtitle("General Support-Unpledged")
+```
+
+```{r, message=FALSE}
+df_finances %>%
+  ggplot() +
+  geom_point(mapping = aes(x = obsv_num, y = `Member Pledges`)) +
+  geom_smooth(mapping = aes(x = obsv_num, y = `Member Pledges`), color = "red")+
+  geom_smooth(mapping = aes(x = obsv_num, y = `Member Pledges`), method = "lm", color = "red") +
+  geom_point(mapping = aes(x = obsv_num, y = `General Support-Unpledged`)) +
+  geom_smooth(mapping = aes(x = obsv_num, y = `General Support-Unpledged`), color = "blue")+
+  geom_smooth(mapping = aes(x = obsv_num, y = (`General Support-Unpledged` + `Member Pledges`)), method = "lm", color = "green") +
+  geom_point(mapping = aes(x = obsv_num, y = (`General Support-Unpledged` + `Member Pledges`))) +
+  geom_smooth(mapping = aes(x = obsv_num, y = (`General Support-Unpledged` + `Member Pledges`)), color = "green") +
+  geom_smooth(mapping = aes(x = obsv_num, y = (`General Support-Unpledged` + `Member Pledges`)), method = "lm", color = "green")
+```
+
+```{r,}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = `Meetings & Meals...7` )) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red")+
+  ggtitle("Meetings & Meals")
+```   
+
+```{r,}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = `Total Personnel` )) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red")+
+  ggtitle("Total Personnel")
+```
+
+
+```{r,}
+mod_personnel_lm <-  lm(`Total Personnel` ~ obsv_num, data = df_finances)
+summary(mod_personnel_lm)
+```
+
+```{r,}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = `Total Admin/Program Expense` )) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red")+
+  ggtitle("Total Admin/Program Expense")
+```
+
+
+```{r,}
+mod_personnel_lm <-  lm(`Total Admin/Program Expense` ~ obsv_num, data = df_finances)
+summary(mod_personnel_lm)
+```
+
+
+```{r}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = `Worship/Ministry/Flowers` )) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red") +
+  ggtitle("Worship/Ministry/Flowers")
+```
+
+
+```{r}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = `Total Revenue` )) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red") +
+  ggtitle("Total Revenue")
+```   
+
+```{r}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = Advertising )) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red") +
+  geom_abline(intercept = 250, slope = 0, size = 0.7)
+```  
+
+```{r, include=FALSE}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = `Christian Educ incl Babysitter` )) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red")
+```
+
+There was no Outreach-General recorded from 1994 to 2019 (when Pastor Fox arrives) and even then it was 0 until 2021.
+
+```{r}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = `Worship Ministry Revenue`)) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red")
+```  
+
+```{r}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = `Worship Ministry Expense`)) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red")
+```
+
+```{r, }
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = `Worship (Deficit)`)) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red")
+```
+
+```{r,}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = (`Total Admin/Program Expense`+`Total Personnel`)/`Grand Total Expense` )) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red")+
+  ggtitle("Inward Finances")
+```
+
+```{r,}
+df_finances %>%
+  ggplot(mapping = aes(x = obsv_num, y = (`Total Personnel`)/`Grand Total Expense` )) +
+  geom_point() +
+  geom_smooth()+
+  geom_smooth(method = "lm", color = "red")
+```
+
+
+```{r,}
+mod_inward_lm <-  lm((`Total Personnel`)/`Grand Total Expense` ~ obsv_num, data = df_finances)
+summary(mod_inward_lm)
+
+```
+```{r}
+coefplot::coefplot(mod_inward_lm, coefficients="obsv_num")
+```
+
+
+
+## Warning
+
+*Revolving door of pastors.*
+Too many church members see the pastor as the person who does all the ministry instead of the one who equips others to do the work of ministry. Ephesians 4:11-12
+Consequence of unbiblical view of the role of the pastor is a tradition of unreasonable expectations.
+Unbiblical, insensitive, and downright mean…
+  
+
+## Conclusion/Closing Remarks
+ There practical steps to take but that isn't a part of the presentation. The only call to action I'm making to you all now is the call to pray. 
+
+Pray fervently for God’s power in their congregation. They met twice a month and used an app to remind them to pray together every day of the week at a specific time. 
+
+Before we change, We need to intentionally decided to change what the church is doing to revive. Prayerfully make the necesasry changes
+
+“Note what they did not do: They did not say they had to increase attendance. They did not say they have to have a numerical turnaround. Instead, they dreamed again and reached into their community.” Pg 47
+
+“If we think the Gospel is important… if we think telling people about Jesus is important… if we believe Jesus is the only way of salvation… shouldn’t we know how many people we are reaching?” Pg 53
+
+“Of course, we theologically know the power of prayer. That is to say, we believe it but don’t always practice it. The tyranny of the urgent replaces the priorities of God.”
+
+“Prayer is a prerequisite for revitalization; it is also a byproduct of it.” pg 62
+
+Request: Pray for the church and for the Pastor at a designated time every day, pause and pray for one minute.
+
+“It is God who revitalizes churches. If we truly want to see his work in our churches, we must turn to him in prayer.” 
+
+“Let us never ever think church turnaround is a human-powered endeavor. We are God’s instruments, but we aren’t the power.” Pg 77
+
+“The pastor silver bullet is, by far, the most common we heard from church leaders seeking revitalization for their congregations.”
+“The members of the church just want a hired hand, not a pastor. They want someone to do the work of ministry for the church. They don’t want to change. They don’t want to make painful and necessary decisions. They want a pastor silver bullet. It never works. Never.” Pg87
+
+Warning for the Death Spiral
+
+“There are no magical, easy-fix solutions.” Pg 85
+We need to cry to God to intervene and to create a willingness on the part of the church members to be obedient. This should feel sobering because this is serious stuff. 
+
+There are no silver bullets. There is only a difficult journey ahead of us and although we don't know where this is going nor how this will turnout or end, we know who we can choose to walk with and follow. Like God inviting Abraham Hebrews 11 onto this faith journey, that Is what God is calling us to now. So how are we going to respond?
+
+*No Prayer. No Hope.*
+
