@@ -1,6 +1,8 @@
 # Volunteer_Projects
 Volunteer Data Analysis/Computer Science Projects
 
+**For best viewing experience, open HTML file in browser**
+
 - **First Baptist Church of Pittsburgh** Data Exploration Report: Are We a Dying Church? (2024)
   > - Cleaned data & converted formatting to process using Tidyverse in R
   > - Used Bayesian Statistics to determine statistical significance of attendance trends
